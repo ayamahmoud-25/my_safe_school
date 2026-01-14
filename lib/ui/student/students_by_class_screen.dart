@@ -59,10 +59,10 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: Text(" ${Strings.STUDENT_CLASS} ${widget.classKey}"),
+          title: Text(" ${Strings.STUDENT_CLASS} ${widget.classKey}",style: TextStyle(color: Colors.white),),
           centerTitle: true,
           backgroundColor: Colors.indigo,
-          leading: const Icon(Icons.groups),
+          leading: const Icon(Icons.groups,color: Colors.white,),
         ),
         body: students.isEmpty
             ? const Center(child: CircularProgressIndicator())

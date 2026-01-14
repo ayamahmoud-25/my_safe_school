@@ -81,7 +81,7 @@ class _ResultScreenState extends State<ResultScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: Text("تقرير الصف ${widget.grade}-${widget.classNum}"),
+          title: Text("تقرير الصف ${widget.grade}-${widget.classNum}",style: TextStyle(color: Colors.white),),
           centerTitle: true,
           backgroundColor:
           hasAbsent ? Colors.red.shade700 : Colors.green.shade700,

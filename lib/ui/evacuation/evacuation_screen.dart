@@ -51,10 +51,10 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: const Text(Strings.EVACUATION_CLASS),
+          title: const Text(Strings.EVACUATION_CLASS,style: TextStyle(color: Colors.white),),
           centerTitle: true,
           backgroundColor: Colors.indigo,
-          leading: const Icon(Icons.warning_amber_rounded),
+          leading: const Icon(Icons.warning_amber_rounded,color: Colors.white,),
         ),
 
         body: Padding(

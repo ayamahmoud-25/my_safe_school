@@ -62,7 +62,7 @@ class _ScanScreenState extends State<ScanScreen> {
       child: Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
-          title: const Text("مسح بطاقات الطالبات"),
+          title: const Text("مسح بطاقات الطالبات",style: TextStyle(color: Colors.white),),
           centerTitle: true,
           backgroundColor: Colors.red.shade700,
           actions: [

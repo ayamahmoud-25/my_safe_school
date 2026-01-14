@@ -88,7 +88,25 @@ class _ResultScreenState extends State<ResultScreen> {
         ),
         body: loading
             ? const Center(child: CircularProgressIndicator())
-            : Column(
+            : StreamBuilder<DatabaseEvent>(
+      stream: db
+          .child("evacuations/$today/${widget.grade}_${widget.classNum}/present")
+          .onValue,
+      builder: (context, snapshot) {
+
+        // كل ما يحصل تغيير → نعيد تحميل البيانات
+        if (snapshot.connectionState == ConnectionState.active) {
+          loadAttendance();
+        }
+
+        if (loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        bool hasAbsent = absentStudents.isNotEmpty;
+        int total = presentStudents.length + absentStudents.length;
+
+        return Column(
           children: [
             // Header حالة الصف
             Container(
@@ -121,14 +139,14 @@ class _ResultScreenState extends State<ResultScreen> {
 
             const SizedBox(height: 16),
 
-            // إحصائيات
+            // الإحصائيات
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [
                   _statCard("الإجمالي", total, Colors.blue),
-                  _statCard("الحاضرات", presentStudents.length,
-                      Colors.green),
+                  _statCard(
+                      "الحاضرات", presentStudents.length, Colors.green),
                   _statCard(
                       "الغائبات", absentStudents.length, Colors.red),
                 ],
@@ -185,8 +203,11 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
+    ),
+
+    ),
     );
   }
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:my_safe_school/data/firebase_constant.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+
+import '../../util/Strings.dart';
 
 class StudentsByClassScreen extends StatefulWidget {
   final String classKey;
@@ -22,7 +25,7 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
   }
 
   Future<void> fetchStudents() async {
-    final snapshot = await db.child('students').get();
+    final snapshot = await db.child(FirebaseConstant.STUDENT_TABLE_NAME).get();
     if (!snapshot.exists) return;
 
     final allStudents = Map<String, dynamic>.from(snapshot.value as Map);
@@ -39,9 +42,13 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
   }
 
   Future<void> updateStudentName(String id, String newName) async {
-    await db.child('students/$id/name').set(newName);
+    await db
+        .child(FirebaseConstant.STUDENT_URL_DASH)
+        .child(id).child(FirebaseConstant.NAME_DASH_URL)
+        .set(newName);
+
     setState(() {
-      students[id]!['name'] = newName;
+      students[id]![Strings.NAME_KEY] = newName;
     });
   }
 
@@ -52,7 +59,7 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: Text("طالبات الصف ${widget.classKey}"),
+          title: Text(" ${Strings.STUDENT_CLASS} ${widget.classKey}"),
           centerTitle: true,
           backgroundColor: Colors.indigo,
           leading: const Icon(Icons.groups),
@@ -65,10 +72,10 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
           itemBuilder: (context, index) {
             final id = students.keys.elementAt(index);
             final data = students[id];
-            final name = data['name'] ?? '';
-            final grade = data['grade'] ?? '';
-            final classNum = data['class'] ?? '';
-            final qr = data['qr'] ?? '';
+            final name = data[Strings.NAME_KEY] ?? '';
+            final grade = data[Strings.GRADE_KEY] ?? '';
+            final classNum = data[Strings.CLASS_KEY] ?? '';
+            final qr = data[Strings.QR_KEY] ?? '';
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
@@ -110,7 +117,7 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "الصف: $grade - $classNum",
+                            " ${Strings.CLASS} $grade ${Strings.DASH} $classNum",
                             style: TextStyle(
                               fontSize: 15,
                               color: Colors.grey.shade700,
@@ -122,7 +129,7 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                             alignment: Alignment.centerLeft,
                             child: ElevatedButton.icon(
                               icon: const Icon(Icons.edit, size: 18),
-                              label: const Text("تعديل الاسم",style: TextStyle(color: Colors.white),),
+                              label: const Text(Strings.EDIT_NAME,style: TextStyle(color: Colors.white),),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.indigo,
                                 shape: RoundedRectangleBorder(
@@ -136,25 +143,25 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                                 final newName = await showDialog<String>(
                                   context: context,
                                   builder: (_) => AlertDialog(
-                                    title: const Text("تعديل اسم الطالبة"),
+                                    title: const Text(Strings.EDIT_STUDENT_NAME),
                                     content: TextField(
                                       controller: controller,
                                       decoration: const InputDecoration(
-                                        hintText: "اكتب الاسم الجديد",
+                                        hintText: Strings.WRITE_NEW_NAME,
                                       ),
                                     ),
                                     actions: [
                                       TextButton(
                                         onPressed: () =>
                                             Navigator.pop(context),
-                                        child: const Text("إلغاء"),
+                                        child: const Text(Strings.CANCEL),
                                       ),
                                       ElevatedButton(
                                         onPressed: () => Navigator.pop(
                                           context,
                                           controller.text,
                                         ),
-                                        child: const Text("حفظ"),
+                                        child: const Text(Strings.SAVE),
                                       ),
                                     ],
                                   ),

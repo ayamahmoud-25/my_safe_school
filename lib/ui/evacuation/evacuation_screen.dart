@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:my_safe_school/data/firebase_constant.dart';
 import 'package:my_safe_school/ui/student/students_by_class_screen.dart';
+import '../../util/Strings.dart';
 import '../scan/scan_screen.dart';
 
 class EvacuationScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class EvacuationScreen extends StatefulWidget {
 }
 
 class _EvacuationScreenState extends State<EvacuationScreen> {
-  final db = FirebaseDatabase.instance.ref("classes");
+  final db = FirebaseDatabase.instance.ref(FirebaseConstant.CLASSES_TABLE_NAME);
 
   int exitNumber = 0;
   String className = "";
@@ -36,8 +38,8 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
     if (snap.exists) {
       final data = snap.value as Map<dynamic, dynamic>;
       setState(() {
-        exitNumber = data["exit"] ?? 0;
-        className = data["name"] ?? "";
+        exitNumber = data[Strings.EXIT_KEY] ?? Strings.DEFAULT_VALUE;
+        className = data[Strings.NAME_KEY] ?? Strings.EMPTY;
       });
     }
   }
@@ -49,7 +51,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: const Text("إخلاء الصف"),
+          title: const Text(Strings.EVACUATION_CLASS),
           centerTitle: true,
           backgroundColor: Colors.indigo,
           leading: const Icon(Icons.warning_amber_rounded),
@@ -95,7 +97,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "رقم المخرج: $exitNumber",
+                              "${Strings.EXITS_NUMBER} $exitNumber",
                               style: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.black54,
@@ -118,7 +120,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.qr_code_scanner),
                   label: const Text(
-                    "بدء أخذ الحضور",
+                    Strings.START_EVACUATION,
                     style: TextStyle(fontSize: 18,color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -150,7 +152,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.people),
                   label: const Text(
-                    "عرض الطالبات",
+                    Strings.SHOW_STUDENT,
                     style: TextStyle(fontSize: 18),
                   ),
                   style: OutlinedButton.styleFrom(

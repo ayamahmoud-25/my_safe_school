@@ -42,6 +42,7 @@ class  Strings {
   static const String NAME_KEY = "name";
   static const String EXIT_KEY = "exit";
   static const String QR_KEY = "qr";
+  static const String EXIT_ID_KEY = "exitId";
 
 
   //Errors & Success

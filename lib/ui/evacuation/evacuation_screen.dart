@@ -1,67 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:my_safe_school/data/firebase_constant.dart';
-import 'package:my_safe_school/ui/student/students_by_class_screen.dart';
-import '../../util/Strings.dart';
+import '../student/students_by_class_screen.dart';
 import '../scan/scan_screen.dart';
 
-class EvacuationScreen extends StatefulWidget {
-  final String grade;
-  final String classNum;
+class EvacuationScreen extends StatelessWidget {
+  final String classKey;
+  final String className;
+  final String exitName;
 
   const EvacuationScreen({
     super.key,
-    required this.grade,
-    required this.classNum,
+    required this.classKey,
+    required this.className,
+    required this.exitName,
   });
 
   @override
-  State<EvacuationScreen> createState() => _EvacuationScreenState();
-}
-
-class _EvacuationScreenState extends State<EvacuationScreen> {
-  final db = FirebaseDatabase.instance.ref(FirebaseConstant.CLASSES_TABLE_NAME);
-
-  int exitNumber = 0;
-  String className = "";
-  String classKey = "";
-
-  @override
-  void initState() {
-    super.initState();
-    loadExit();
-  }
-
-  Future<void> loadExit() async {
-    classKey = "${widget.grade}_${widget.classNum}";
-    final snap = await db.child(classKey).get();
-    if (snap.exists) {
-      final data = snap.value as Map<dynamic, dynamic>;
-      setState(() {
-        exitNumber = data[Strings.EXIT_KEY] ?? Strings.DEFAULT_VALUE;
-        className = data[Strings.NAME_KEY] ?? Strings.EMPTY;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // استخراج الصف والشعبة من classKey (مثال: 7_1)
+    final parts = classKey.split("_");
+    final String grade = parts[0];
+    final String classNum = parts[1];
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F6FB),
         appBar: AppBar(
-          title: const Text(Strings.EVACUATION_CLASS,style: TextStyle(color: Colors.white),),
+          title: const Text(
+            "إخلاء الصف",
+            style: TextStyle(color: Colors.white),
+          ),
           centerTitle: true,
           backgroundColor: Colors.indigo,
-          leading: const Icon(Icons.warning_amber_rounded,color: Colors.white,),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
-
         body: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              // كارت المخرج
+              // كارت معلومات الصف
               Card(
                 elevation: 4,
                 shape: RoundedRectangleBorder(
@@ -97,7 +77,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "${Strings.EXITS_NUMBER} $exitNumber",
+                              "المخرج: $exitName",
                               style: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.black54,
@@ -113,15 +93,15 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
 
               const Spacer(),
 
-              // زر أخذ الحضور
+              // زر بدء الإخلاء
               SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.qr_code_scanner),
                   label: const Text(
-                    Strings.START_EVACUATION,
-                    style: TextStyle(fontSize: 18,color: Colors.white),
+                    "بدء الإخلاء",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.indigo,
@@ -133,10 +113,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ScanScreen(
-                          grade: widget.grade,
-                          classNum: widget.classNum,
-                        ),
+                        builder: (_) => ScanScreen(classKey: classKey)
                       ),
                     );
                   },
@@ -152,7 +129,7 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.people),
                   label: const Text(
-                    Strings.SHOW_STUDENT,
+                    "عرض الطالبات",
                     style: TextStyle(fontSize: 18),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -167,14 +144,15 @@ class _EvacuationScreenState extends State<EvacuationScreen> {
                       MaterialPageRoute(
                         builder: (_) => StudentsByClassScreen(
                           classKey: classKey,
+                          className: className,
+                          grade: grade,
+                          classNum: classNum,
                         ),
                       ),
                     );
                   },
                 ),
               ),
-
-              const SizedBox(height: 30),
             ],
           ),
         ),

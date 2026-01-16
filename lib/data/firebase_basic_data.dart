@@ -7,42 +7,54 @@ class FirebaseBasicData {
         "grade": "7",
         "class": "1",
         "students": ["s001", "s002", "s003", "s004", "s005"],
-        "exit": 1,
+        "exitId": "exit_1"
       },
-      /*"7_2": {
-      "name": "سابع 2",
-      "grade": "7",
-      "class": "2",
-      "students": ["s003"],
-      "exit": 2,
-    },
-    "8_1": {
-      "name": "ثامن 1",
-      "grade": "8",
-      "class": "1",
-      "students": ["s004"],
-      "exit": 3,
-    },*/
+
+      "7_2": {
+        "name": "سابع 2",
+        "grade": "7",
+        "class": "2",
+        "students": ["s009", "s010"],
+        "exitId": "exit_1"
+      },
+
+      "8_1": {
+        "name": "ثامن 1",
+        "grade": "8",
+        "class": "1",
+        "students": ["s004"],
+        "exitId": "exit_2"
+      },
+
       "8_2": {
         "name": "ثامن 2",
         "grade": "8",
         "class": "2",
         "students": ["s006", "s007", "s008"],
-        "exit": 4,
-      },
+        "exitId": "exit_2"
+      }
     };
+
   }
 
-  Object exitsDataTable(){
+  Object exitsDataTable() {
     return {
-      "7_1": {"exit": 1},
-      "7_2": {"exit": 2},
-      "8_1": {"exit": 3},
-      "8_2": {"exit": 4},
+      "exit_1": {
+        "name": "المخرج 1"
+      },
+      "exit_2": {
+        "name": "المخرج 2"
+      },
+      "exit_3": {
+        "name": "المخرج 3"
+      },
+      "exit_4": {
+        "name": "المخرج 4"
+      }
     };
   }
 
-  Object evacuationsTable(){
+  Object evacuationsTable() {
     return {
       "7_1": {"absent": {}, "present": {}},
       "7_2": {"absent": {}, "present": {}},
@@ -51,7 +63,7 @@ class FirebaseBasicData {
     };
   }
 
-  Object studentDataTable(){
+  Object studentDataTable() {
     return {
       "s001": {
         "name": "سارة محمد",
@@ -112,7 +124,7 @@ class FirebaseBasicData {
     };
   }
 
-  String getCurrentDate(){
+  String getCurrentDate() {
     DateTime now = DateTime.now();
     String today = DateTime.now().toString().split(' ')[0];
     String formattedDate =

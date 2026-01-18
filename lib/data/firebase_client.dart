@@ -9,7 +9,8 @@ class FirebaseClient {
 
   Future<void> init() async {
     databaseRef = FirebaseDatabase.instance.ref();
-    await insertDefaultData();
+
+    // await insertDefaultData();
   }
 
   Future<void> insertDefaultData() async {

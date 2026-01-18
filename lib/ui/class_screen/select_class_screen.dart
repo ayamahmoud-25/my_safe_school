@@ -316,11 +316,12 @@ class SelectClassScreen extends StatelessWidget {
         content: Text("هل تريد حذف الصف ($className) ؟"),
         actions: [
           TextButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
             child: const Text("إلغاء"),
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
             child: const Text("حذف"),
             onPressed: () async {
               await classesRef.child(classKey).remove();

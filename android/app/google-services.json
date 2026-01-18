@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "645322885560",
+    "project_id": "mysafeschool-55e91",
+    "storage_bucket": "mysafeschool-55e91.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:645322885560:android:21cc37330f1439c2dea74d",
+        "android_client_info": {
+          "package_name": "com.example.my_safe_school"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBB8ksTQzBkwqg_2luc-Bw36i5nooMGg5U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

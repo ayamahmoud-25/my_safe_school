@@ -24,7 +24,7 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
   final db = FirebaseDatabase.instance.ref();
 
   final nameCtrl = TextEditingController();
-  String qrCode = ""; // هنعرضه على طول
+  String qrCode = "";
   bool loading = true;
   List<Map<String, dynamic>> students = [];
 
@@ -35,7 +35,8 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
   }
 
   Future<void> loadStudents() async {
-    final classSnap = await db.child("classes/${widget.classKey}/students").get();
+    final classSnap =
+    await db.child("classes/${widget.classKey}/students").get();
 
     if (!classSnap.exists) {
       setState(() {
@@ -46,13 +47,14 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
     }
 
     List<String> ids = List<String>.from(classSnap.value as List);
-
     List<Map<String, dynamic>> temp = [];
 
     for (var id in ids) {
       final studentSnap = await db.child("students/$id").get();
       if (studentSnap.exists) {
-        temp.add(Map<String, dynamic>.from(studentSnap.value as Map)..["id"] = id);
+        temp.add(
+          Map<String, dynamic>.from(studentSnap.value as Map)..["id"] = id,
+        );
       }
     }
 
@@ -62,13 +64,13 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
     });
   }
 
-  /// ➕ توليد QR code متسلسل
+  /// توليد QR متسلسل
   Future<String> generateStudentId() async {
     final snap = await db.child("students").get();
     if (!snap.exists) return "s001";
 
     Map data = Map<String, dynamic>.from(snap.value as Map);
-    // استخراج آخر رقم
+
     List<int> numbers = [];
     for (var key in data.keys) {
       String qr = data[key]["qr"] ?? "";
@@ -77,17 +79,18 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
         if (num != null) numbers.add(num);
       }
     }
+
     numbers.sort();
     int next = numbers.isEmpty ? 1 : numbers.last + 1;
     return "s${next.toString().padLeft(3, "0")}";
   }
 
+  // إضافة طالبة
   Future<void> addStudent() async {
     if (nameCtrl.text.isEmpty || qrCode.isEmpty) return;
 
-    final newId = qrCode; // نستخدم QR code كـ unique id
+    final newId = qrCode;
 
-    // 1️⃣ إضافة الطالب
     await db.child("students/$newId").set({
       "name": nameCtrl.text,
       "qr": newId,
@@ -96,8 +99,8 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
       "classKey": widget.classKey,
     });
 
-    // 2️⃣ تحديث قائمة الطلاب داخل الصف
-    final classStudentsRef = db.child("classes/${widget.classKey}/students");
+    final classStudentsRef =
+    db.child("classes/${widget.classKey}/students");
     final snap = await classStudentsRef.get();
 
     List<dynamic> updatedList = [];
@@ -114,22 +117,30 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
     Navigator.pop(context);
   }
 
-  void showAddDialog() async {
-    // توليد QR code جديد عند فتح الديالوج
-    qrCode = await generateStudentId();
-    setState(() {}); // تحديث العرض
+  // Dialog الإضافة + التعديل
+  void showStudentDialog({bool isEdit = false, Map<String, dynamic>? student}) async {
+    nameCtrl.text = isEdit && student != null
+        ? student["name"].toString()
+        : "";
+
+    if (isEdit) {
+      qrCode = student?["qr"];
+    } else {
+      qrCode = await generateStudentId();
+    }
+
+    setState(() {});
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("إضافة طالبة"),
+        title: Text(isEdit ? "تعديل الطالبة" : "إضافة طالبة"),
         content: SingleChildScrollView(
           child: SizedBox(
-            width: 300, // عرض ثابت لتجنب مشاكل intrinsic
+            width: 300,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // TextField لاسم الطالبة
                 TextField(
                   controller: nameCtrl,
                   decoration: const InputDecoration(
@@ -138,8 +149,6 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // عرض QR code إذا متولد
                 if (qrCode.isNotEmpty)
                   Column(
                     children: [
@@ -147,11 +156,10 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                       const SizedBox(height: 8),
                       Container(
                         color: Colors.white,
-                        child:  QrImageView(
+                        child: QrImageView(
                           data: qrCode,
                           version: QrVersions.auto,
-                          size: 150, // لازم يكون محدد
-                          gapless: false,
+                          size: 150,
                         ),
                       ),
                     ],
@@ -166,16 +174,31 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
-            child: const Text("إضافة"),
-            onPressed: addStudent,
+            child: Text(isEdit ? "حفظ التعديل" : "إضافة"),
+            onPressed: () async {
+              if (nameCtrl.text.isEmpty) return;
+
+              if (isEdit) {
+                await db.child("students/${student!["id"]}").update({
+                  "name": nameCtrl.text,
+                });
+              } else {
+                await addStudent();
+                return;
+              }
+
+              nameCtrl.clear();
+              qrCode = "";
+              Navigator.pop(context);
+              loadStudents();
+            },
           ),
         ],
       ),
     );
   }
 
-
-  /// 🗑️ حذف طالبة
+  /// حذف طالبة
   void confirmDeleteStudent(String studentId) {
     showDialog(
       context: context,
@@ -200,19 +223,18 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
   }
 
   Future<void> deleteStudent(String studentId) async {
-    // 1️⃣ حذف من students
     await db.child("students/$studentId").remove();
 
-    // 2️⃣ حذف من قائمة الصف
-    final classStudentsRef = db.child("classes/${widget.classKey}/students");
+    final classStudentsRef =
+    db.child("classes/${widget.classKey}/students");
     final snap = await classStudentsRef.get();
+
     if (snap.exists) {
       List<dynamic> list = List<dynamic>.from(snap.value as List);
       list.remove(studentId);
       await classStudentsRef.set(list);
     }
 
-    // 3️⃣ تحديث الـ UI
     loadStudents();
   }
 
@@ -222,27 +244,23 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: Text("طالبات ${widget.className}",style: TextStyle(color: Colors.white),),
-          backgroundColor: Colors.indigo,
-          iconTheme: IconThemeData(
-            color: Colors.white, // هنا لون زر الرجوع
+          title: Text(
+            "طالبات ${widget.className}",
+            style: const TextStyle(color: Colors.white),
           ),
+          backgroundColor: Colors.indigo,
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(
-              icon: const Icon(Icons.add_photo_alternate_outlined,color: Colors.white,),
-              onPressed: showAddDialog,
+              icon: const Icon(Icons.add, color: Colors.white),
+              onPressed: () => showStudentDialog(),
             ),
           ],
         ),
         body: loading
             ? const Center(child: CircularProgressIndicator())
             : students.isEmpty
-            ? const Center(
-          child: Text(
-            "لا يوجد طالبات",
-            style: TextStyle(fontSize: 18),
-          ),
-        )
+            ? const Center(child: Text("لا يوجد طالبات"))
             : ListView.builder(
           padding: const EdgeInsets.all(12),
           itemCount: students.length,
@@ -256,9 +274,12 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                 leading: const Icon(Icons.person),
                 title: Text(
                   s["name"],
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style:
+                  const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                subtitle: Text("الصف: ${s["grade"]} - ${s["class"]}"),
+                subtitle: Text(
+                  "الصف: ${s["grade"]} - ${s["class"]}\nكود الطالبة: ${s["qr"]}",
+                ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -268,8 +289,16 @@ class _StudentsByClassScreenState extends State<StudentsByClassScreen> {
                       size: 50,
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => confirmDeleteStudent(s["id"]),
+                      icon: const Icon(Icons.edit,
+                          color: Colors.blue),
+                      onPressed: () =>
+                          showStudentDialog(isEdit: true, student: s),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete,
+                          color: Colors.red),
+                      onPressed: () =>
+                          confirmDeleteStudent(s["id"]),
                     ),
                   ],
                 ),

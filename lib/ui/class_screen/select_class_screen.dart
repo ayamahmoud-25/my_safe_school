@@ -136,17 +136,37 @@ class SelectClassScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              InkWell(
-                                child: Icon(Icons.delete, color: Colors.red),
-                                onTap: () {
-                                  _confirmDelete(
-                                    context,
-                                    classesRef,
-                                    classKey,
-                                    c["name"],
-                                  );
-                                },
-                              ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  InkWell(
+                                    child: Icon(Icons.delete, color: Colors.red),
+                                    onTap: () {
+                                      _confirmDelete(
+                                        context,
+                                        classesRef,
+                                        classKey,
+                                        c["name"],
+                                      );
+                                    },
+                                  ),
+                                  InkWell(
+                                    child: const Icon(Icons.edit, color: Colors.blue),
+                                    onTap: () {
+                                      _showEditClassDialog(
+                                        context,
+                                        classesRef,
+                                        exitsRef,
+                                        classKey,
+                                        c,
+                                      );
+                                    },
+                                  ),
+
+                                ],
+                              )
+
                             ],
                           ),
                         ),
@@ -332,4 +352,170 @@ class SelectClassScreen extends StatelessWidget {
       ),
     );
   }
+
+  void _showEditClassDialog(
+      BuildContext context,
+      DatabaseReference classesRef,
+      DatabaseReference exitsRef,
+      String classKey,
+      Map<String, dynamic> classData,
+      ) {
+    final TextEditingController nameCtrl = TextEditingController();
+
+    int? selectedClass = int.tryParse(classData["class"].toString());
+    int? selectedGrade = int.tryParse(classData["grade"].toString());
+    String? selectedExitKey = classData["exitId"];
+
+    nameCtrl.text = classData["name"].toString();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("تعديل الصف"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: "اسم الصف",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: "Class",
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedClass,
+                  items: List.generate(9, (index) => index + 1)
+                      .map(
+                        (num) => DropdownMenuItem(
+                      value: num,
+                      child: Text(num.toString()),
+                    ),
+                  )
+                      .toList(),
+                  onChanged: (val) => selectedClass = val,
+                ),
+
+                const SizedBox(height: 12),
+
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: "Grade",
+                    border: OutlineInputBorder(),
+                  ),
+                  value: selectedGrade,
+                  items: List.generate(12, (index) => index + 1)
+                      .map(
+                        (num) => DropdownMenuItem(
+                      value: num,
+                      child: Text(num.toString()),
+                    ),
+                  )
+                      .toList(),
+                  onChanged: (val) => selectedGrade = val,
+                ),
+
+                const SizedBox(height: 12),
+
+                FutureBuilder<DataSnapshot>(
+                  future: exitsRef.get(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData || snapshot.data!.value == null) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final exitsMap = Map<String, dynamic>.from(
+                      snapshot.data!.value as Map,
+                    );
+
+                    return DropdownButtonFormField<String>(
+                      decoration: const InputDecoration(
+                        labelText: "اختر المخرج",
+                        border: OutlineInputBorder(),
+                      ),
+                      value: selectedExitKey,
+                      items: exitsMap.keys
+                          .map(
+                            (key) => DropdownMenuItem<String>(
+                          value: key,
+                          child: Text(exitsMap[key]["name"] ?? key),
+                        ),
+                      )
+                          .toList(),
+                      onChanged: (val) => selectedExitKey = val,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("إلغاء"),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton(
+              child: const Text("حفظ التعديل"),
+              onPressed: () async {
+                final name = nameCtrl.text.trim();
+
+                if (name.isEmpty ||
+                    selectedClass == null ||
+                    selectedGrade == null ||
+                    selectedExitKey == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("يرجى إدخال جميع البيانات"),
+                    ),
+                  );
+                  return;
+                }
+
+                final newClassKey = "${selectedClass}_${selectedGrade}";
+
+                // لو غير Class أو Grade نتحقق من التكرار
+                if (newClassKey != classKey) {
+                  final exists = await classesRef.child(newClassKey).get();
+                  if (exists.exists) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("هذا الصف موجود بالفعل!"),
+                      ),
+                    );
+                    return;
+                  }
+                }
+
+                final updatedClass = {
+                  "name": name,
+                  "class": selectedClass.toString(),
+                  "grade": selectedGrade.toString(),
+                  "exitId": selectedExitKey,
+                  "students": classData["students"] ?? [],
+                };
+
+                // لو المفتاح اتغير ننقل العقدة
+                if (newClassKey != classKey) {
+                  await classesRef.child(newClassKey).set(updatedClass);
+                  await classesRef.child(classKey).remove();
+                } else {
+                  await classesRef.child(classKey).update(updatedClass);
+                }
+
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }

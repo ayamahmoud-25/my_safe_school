@@ -86,11 +86,6 @@ post_install do |installer|
     end
   end
   
-  # Additional fix for BoringSSL-GRPC
-  installer.pods_project.build_configurations.each do |config|
-    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "arm64"
-  end
-  
   # Remove -G flag from BoringSSL-GRPC specifically
   installer.aggregate_targets.each do |target|
     target.xcconfigs.each do |variant, xcconfig|

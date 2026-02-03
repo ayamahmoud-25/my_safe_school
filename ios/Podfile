@@ -98,7 +98,18 @@ post_install do |installer|
       # Add CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES to xcconfig
       xcconfig.attributes['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       
+      # Remove arm64 exclusion for simulator (required for Apple Silicon Macs)
+      xcconfig.attributes.delete('EXCLUDED_ARCHS[sdk=iphonesimulator*]')
+      
       xcconfig.save_as(target.xcconfig_path(variant))
     end
+  end
+  
+  # Remove EXCLUDED_ARCHS from Pods xcconfig files for simulator
+  Dir.glob(File.join(installer.sandbox.root, 'Target Support Files', '**', '*.xcconfig')).each do |path|
+    content = File.read(path)
+    content.gsub!(/EXCLUDED_ARCHS\[sdk=iphonesimulator\*\] = arm64\n?/, '')
+    content.gsub!(/EXCLUDED_ARCHS\[sdk=iphonesimulator\*\] = i386\n?/, '')
+    File.write(path, content)
   end
 end
